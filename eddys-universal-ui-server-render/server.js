@@ -25,29 +25,29 @@ app.get('/api/ticket/:id?', (req, res) => {
 })
 
 app.get('*', (req, res) => {
-  match({ routes: routes, location: req.url }, (err, redirect, props) => {
+  match({ routes: routes, location: req.url }, (err, redirect, serverRenderedData) => {
     if (err) {
       res.status(500).send(err.message)
     } else if (redirect) {
       res.redirect(redirect.pathname + redirect.search)
-    } else if (props) {
+    } else if (serverRenderedData) {
       const routerContextWithData = (
         <RouterContext 
-          {...props}
-          createElement={(Component, props) => {
-            return <Component tickets={tickets} {...props} />
+          {...serverRenderedData}
+          createElement={(Component, serverRenderedData) => {
+            return <Component tickets={tickets} {...serverRenderedData} />
           }}
         />
       )
-      const appHtml = renderToString(routerContextWithData)
-      res.send(renderPage(appHtml))
+      const serverContent = renderToString(routerContextWithData)
+      res.send(serverContentRender(serverContent))
     } else {
       res.status(404).send('Not Found')
     }
   })
 })
 
-function renderPage(appHtml) {
+function serverContentRender(serverContent) {
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -56,7 +56,7 @@ function renderPage(appHtml) {
     <title>eddy's ticketing app</title>
   </head>
   <body>
-    <div id="app">${appHtml}</div> 
+    <div id="app">${serverContent}</div> 
     <script src="/bundle.js"></script>
   </body>
   </html>
